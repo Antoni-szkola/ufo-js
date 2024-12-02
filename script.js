@@ -52,6 +52,21 @@ class Obiekt {
         return false;
     }
 
+    animate() {
+        const speed = this.speed;
+
+        if (this.moving.right && !this.isOOB('right')) this.move(speed, 0);
+        if (this.moving.left && !this.isOOB('left')) this.move(-speed, 0);
+        if (this.moving.up && !this.isOOB('up')) this.move(0, -speed);
+        if (this.moving.down && !this.isOOB('down')) this.move(0, speed);
+
+        if (this.isMoving) {
+            requestAnimationFrame(() => this.animate());
+        }
+    }
+}
+
+class UFO extends Obiekt {
     handleInput() {
         document.addEventListener("keydown", (e) => {
             const key = e.key.toLowerCase(); 
@@ -89,26 +104,46 @@ class Obiekt {
             }
         });
     }
+}
+
+class Rock extends Obiekt {
+    fall() {
+        this.moving.down = true;
+
+        if (!this.isMoving) {
+            this.isMoving = true;
+            this.animate();
+        }
+    }
 
     animate() {
-        const speed = this.speed;
+        super.animate();
 
-        if (this.moving.right && !this.isOOB('right')) this.move(speed, 0);
-        if (this.moving.left && !this.isOOB('left')) this.move(-speed, 0);
-        if (this.moving.up && !this.isOOB('up')) this.move(0, -speed);
-        if (this.moving.down && !this.isOOB('down')) this.move(0, speed);
-
-        if (this.isMoving) {
-            requestAnimationFrame(() => this.animate());
+        if (this.isOOB('down')) {
+            this.element.remove(); 
+            this.isMoving = false;
         }
     }
 }
 
-const UFO = new Obiekt({
+// Falling rocks
+function spawnRock() {
+    const randomX = Math.random() * (window.innerWidth - 200); 
+    const rock = new Rock({
+        defaultX: randomX,
+        defaultY: 0,
+        speed: 5
+    });
+    rock.draw("img/rock.png", "Rock");
+    rock.fall();
+}
+setInterval(spawnRock, 750);
+
+// Create the UFO
+const ufo = new UFO({
     defaultX: 0,
     defaultY: 0,
     speed: 10, // Adjust speed for smoother movement
 });
-UFO.draw("img/ufo.png", "UFO");
-
-UFO.handleInput();
+ufo.draw("img/ufo.png", "UFO");
+ufo.handleInput();
