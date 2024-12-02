@@ -1,19 +1,17 @@
-
 class Obiekt {
-    constructor(x, y, speed) {
-        // Początkowe (x, y)
-        this.x = x;
-        this.y = y;   
+    constructor(config) {
+        this.x = config.defaultX;
+        this.y = config.defaultY;   
 
-        this.speed = speed;
+        this.speed = config.speed;
 
         this.element = document.createElement("img");
         this.element.style.position = "absolute";
 
         this.updatePos();
 
-        this.moving = { up: false, down: false, left: false, right: false }; // Track movement state
-        this.moveInterval = null; // To store the interval for continuous movement
+        this.moving = { up: false, down: false, left: false, right: false };  // Track in which direction it's currently moving
+        this.isMoving = false; // Track if the object is moving
     }
 
     // Syncs object (x, y) with CSS 
@@ -22,7 +20,7 @@ class Obiekt {
         this.element.style.top = `${this.y}px`;
     }
 
-    // Nastawienie faktycznego zdjęcia
+    // Set src, alt and draw to screen
     draw(src, alt) {
         this.element.src = src;
         this.element.alt = alt;
@@ -38,54 +36,80 @@ class Obiekt {
         this.updatePos();
     }
 
+    isOOB(direction) {
+        const elementWidth = this.element.clientWidth;
+        const elementHeight = this.element.clientHeight;
+
+        if (direction === 'right') {
+            return this.x + elementWidth > window.innerWidth - this.speed;
+        } else if (direction === 'left') {
+            return this.x < 0 + this.speed;
+        } else if (direction === 'up') {
+            return this.y < 0 + this.speed;
+        } else if (direction === 'down') {
+            return this.y + elementHeight > window.innerHeight - this.speed;
+        }
+        return false;
+    }
+
     handleInput() {
-        const speed = this.speed;
-        
-        document.body.addEventListener("keydown", (e) => {
-            const key = e.key;
-            console.log(e.key);
-            if (key === "d" || key === "ArrowRight") {
+        document.addEventListener("keydown", (e) => {
+            const key = e.key.toLowerCase(); 
+            if (key === "d" || key === "arrowright") {
                 this.moving.right = true;
-            } else if (key === "a" || key === "ArrowLeft") {
+            } else if (key === "a" || key === "arrowleft") {
                 this.moving.left = true;
-            } else if (key === "w" || key === "ArrowUp") {
+            } else if (key === "w" || key === "arrowup") {
                 this.moving.up = true;
-            } else if (key === "s" || key === "ArrowDown") {
+            } else if (key === "s" || key === "arrowdown") {
                 this.moving.down = true;
             }
 
-            if (!this.moveInterval) {
-                this.moveInterval = setInterval(() => {
-                    if (this.moving.right) this.move(speed, 0);
-                    if (this.moving.left) this.move(-speed, 0);
-                    if (this.moving.up) this.move(0, -speed);
-                    if (this.moving.down) this.move(0, speed);
-                }, 100);
+            if (!this.isMoving) {
+                this.isMoving = true;
+                this.animate();
             }
         });
 
         document.addEventListener("keyup", (e) => {
-            const key = e.key;
-            if (key === "d" || key === "ArrowRight") {
+            const key = e.key.toLowerCase();
+            if (key === "d" || key === "arrowright") {
                 this.moving.right = false;
-            } else if (key === "a" || key === "ArrowLeft") {
+            } else if (key === "a" || key === "arrowleft") {
                 this.moving.left = false;
-            } else if (key === "w" || key === "ArrowUp") {
+            } else if (key === "w" || key === "arrowup") {
                 this.moving.up = false;
-            } else if (key === "s" || key === "ArrowDown") {
+            } else if (key === "s" || key === "arrowdown") {
                 this.moving.down = false;
             }
 
             // Stop moving if no keys are pressed
             if (!this.moving.right && !this.moving.left && !this.moving.up && !this.moving.down) {
-                clearInterval(this.moveInterval);
-                this.moveInterval = null;
+                this.isMoving = false;
             }
         });
     }
+
+    animate() {
+        const speed = this.speed;
+
+        if (this.moving.right && !this.isOOB('right')) this.move(speed, 0);
+        if (this.moving.left && !this.isOOB('left')) this.move(-speed, 0);
+        if (this.moving.up && !this.isOOB('up')) this.move(0, -speed);
+        if (this.moving.down && !this.isOOB('down')) this.move(0, speed);
+
+        if (this.isMoving) {
+            requestAnimationFrame(() => this.animate());
+        }
+    }
 }
 
-const UFO = new Obiekt(50, 50, 100);
+const UFO = new Obiekt({
+    defaultX: 500,
+    defaultY: 0,
+    speed: 10, // Adjust speed for smoother movement
+});
+
 UFO.draw("img/ufo.png", "UFO");
 
-UFO.handleInput()
+UFO.handleInput();
