@@ -105,11 +105,10 @@ class Obiekt {
 }
 
 const UFO = new Obiekt({
-    defaultX: 500,
+    defaultX: 0,
     defaultY: 0,
     speed: 10, // Adjust speed for smoother movement
 });
-
 UFO.draw("img/ufo.png", "UFO");
 
 UFO.handleInput();
