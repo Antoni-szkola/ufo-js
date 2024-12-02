@@ -2,6 +2,7 @@ class Obiekt {
     constructor(config) {
         this.x = config.defaultX;
         this.y = config.defaultY;   
+        this.class = config.class == undefined ? "" : config.class
 
         this.speed = config.speed;
 
@@ -123,8 +124,26 @@ class Rock extends Obiekt {
             this.element.remove(); 
             this.isMoving = false;
         }
+
+        if (this.checkCollision(ufo)) {
+            alert("Zostałeś zaceglony :(((((");
+            window.location.reload()
+        }
+    }
+
+    checkCollision(ufo) {
+        const ufoRect = ufo.element.getBoundingClientRect();
+        const rockRect = this.element.getBoundingClientRect();
+
+        return !(
+            ufoRect.right < rockRect.left ||
+            ufoRect.left > rockRect.right ||
+            ufoRect.bottom < rockRect.top ||
+            ufoRect.top > rockRect.bottom
+        );
     }
 }
+
 
 // Falling rocks
 function spawnRock() {
@@ -132,12 +151,13 @@ function spawnRock() {
     const rock = new Rock({
         defaultX: randomX,
         defaultY: 0,
-        speed: 5
+        speed: 5,
+        class: "rock"
     });
     rock.draw("img/rock.png", "Rock");
     rock.fall();
 }
-setInterval(spawnRock, 750);
+setInterval(spawnRock, 1250);
 
 // Create the UFO
 const ufo = new UFO({
